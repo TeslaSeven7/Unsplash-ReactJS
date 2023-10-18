@@ -3,32 +3,24 @@ import { useState, useEffect, useRef } from 'react';
 import spinner from '../assets/spinner.svg';
 import usePhotos from '../hooks/usePhotos';
 
+import LastPhoto from './LastPhoto';
+import Photos from './Photos';
 export default function List() {
 	const [query, setQuery] = useState('random');
 	const [pageNumber, setPageNumber] = useState(1);
 	const photosApiData = usePhotos(query, pageNumber);
-	console.log(photosApiData);
 	const lastPicRef = useRef();
 	const searchRef = useRef();
-	useEffect(() => {
-		if (lastPicRef.current) {
-			const observer = new IntersectionObserver(([entry]) => {
-				if (entry.isIntersecting && photosApiData.maxPages !== pageNumber) {
-					setPageNumber(pageNumber + 1);
-					lastPicRef.current = null;
-					observer.disconnect();
-				}
-			});
-			observer.observe(lastPicRef.current);
-		}
-	}, [photosApiData]);
+
 	function handleSubmit(e) {
 		e.preventDefault();
 		if (searchRef.current.value !== query) {
-			console.log('yol');
 			setQuery(searchRef.current.value);
 			setPageNumber(1);
 		}
+	}
+	function updateContent() {
+		setPageNumber(pageNumber + 1);
 	}
 	return (
 		<>
@@ -56,25 +48,23 @@ export default function List() {
 					photosApiData.photos.map((photo, index) => {
 						if (photosApiData.photos.length === index + 1) {
 							return (
-								<li
-									key={photo.id}
-									ref={lastPicRef}>
-									<img
-										className='w-full h-full object-cover'
-										src={photo.urls.regular}
-										alt={photo.alt_description}
-									/>
-								</li>
+								<LastPhoto
+									keys={photo.id}
+									updatePhotos={updateContent}
+									photosApiData={photosApiData}
+									source={photo.urls.regular}
+									alt={photo.alt_description}
+									refs={lastPicRef}
+									pageNumber={pageNumber}
+								/>
 							);
 						} else {
 							return (
-								<li key={photo.id}>
-									<img
-										className='w-full h-full object-cover'
-										src={photo.urls.regular}
-										alt={photo.alt_description}
-									/>
-								</li>
+								<Photos
+									keys={photo.id}
+									source={photo.urls.regular}
+									alt={photo.alt_description}
+								/>
 							);
 						}
 					})}
